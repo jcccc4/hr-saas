@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2 } from "lucide-react";
-import React, { useState, KeyboardEvent, useRef, useEffect } from "react";
+import React, { KeyboardEvent, useRef } from "react";
 import { ChecklistItem } from "./TaskDetail";
 import { Textarea } from "@/components/ui/textarea";
 

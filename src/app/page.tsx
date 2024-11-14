@@ -51,7 +51,6 @@ export default function Home() {
     },
     { id: 5, text: "Call mom", description: "", completed: true },
   ]);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleTask = (id: number) => {
     setTasks(
@@ -66,13 +65,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col ">
       <Sheet key={"left"}>
         <header className="bg-white px-4 pt-4 pb-2">
           <div className="flex gap-2">
             <SheetTrigger>
               <div className="lg:hidden">
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                <Menu size={24} />
               </div>
             </SheetTrigger>
             <h1 className="text-2xl font-semibold">To do List</h1>
