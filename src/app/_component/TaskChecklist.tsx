@@ -1,26 +1,35 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
-import React, { useState, KeyboardEvent } from "react";
+import React, { useState, KeyboardEvent, useRef, useEffect } from "react";
+import { ChecklistItem } from "./TaskDetail";
+import { Textarea } from "@/components/ui/textarea";
 
-type ChecklistItem = {
-  id: number;
-  text: string;
-  checked: boolean;
-};
+function TaskChecklist({
+  subtasks,
+  setSubtasks,
+}: {
+  subtasks: ChecklistItem[];
+  setSubtasks: React.Dispatch<React.SetStateAction<ChecklistItem[]>>;
+}) {
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
-function TaskChecklist() {
-  const [items, setItems] = useState<ChecklistItem[]>([
-    { id: 1, text: "", checked: false },
-  ]);
+  const adjustTextAreaHeight = () => {
+    const textarea = textAreaRef.current;
+    if (textarea) {
+      setTimeout(() => {
+        textarea.style.height = "auto";
+        textarea.style.height = `${textarea.scrollHeight}px`;
+      }, 0);
+    }
+  };
 
   const focusOnItem = (id: number) => {
     setTimeout(() => {
       const input = document.querySelector(
-        `input[data-id="${id}"]`
-      ) as HTMLInputElement | null;
-
+        `textarea[data-id="${id}"]`
+      ) as HTMLTextAreaElement | null;
+      console.log(input);
       if (input) {
         input.focus();
         const length = input.value.length;
@@ -30,33 +39,33 @@ function TaskChecklist() {
   };
 
   const addItem = () => {
-    const newId = Math.max(0, ...items.map((item) => item.id)) + 1;
-    setItems((prev) => [...prev, { id: newId, text: "", checked: false }]);
+    const newId = Math.max(0, ...subtasks.map((item) => item.id)) + 1;
+    setSubtasks((prev) => [...prev, { id: newId, text: "", checked: false }]);
+
     focusOnItem(newId);
   };
 
   const removeItem = (id: number) => {
-    const currentIndex = items.findIndex((item) => item.id === id);
+    const currentIndex = subtasks.findIndex((item) => item.id === id);
     if (currentIndex > 0) {
-      // Get the ID and text of the item above the one being deleted
-      const previousItemId = items[currentIndex - 1].id;
-      setItems((prev) => prev.filter((item) => item.id !== id));
+      const previousItemId = subtasks[currentIndex - 1].id;
+      setSubtasks((prev) => prev.filter((item) => item.id !== id));
       focusOnItem(previousItemId);
     } else {
-      const nextItemId = items[currentIndex + 1].id;
-      setItems((prev) => prev.filter((item) => item.id !== id));
+      const nextItemId = subtasks[currentIndex + 1].id;
+      setSubtasks((prev) => prev.filter((item) => item.id !== id));
       focusOnItem(nextItemId);
     }
   };
 
   const handleChecklistItemChange = (id: number, newText: string) => {
-    setItems((prev) =>
+    setSubtasks((prev) =>
       prev.map((item) => (item.id === id ? { ...item, text: newText } : item))
     );
   };
 
   const toggleChecklistItem = (id: number) => {
-    setItems((prev) =>
+    setSubtasks((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, checked: !item.checked } : item
       )
@@ -64,14 +73,14 @@ function TaskChecklist() {
   };
 
   const handleKeyDown = (
-    e: KeyboardEvent<HTMLInputElement>,
+    e: KeyboardEvent<HTMLTextAreaElement>,
     item: ChecklistItem
   ) => {
     if (e.key === "Enter") {
       e.preventDefault();
       addItem();
     } else if (e.key === "Backspace" && item.text === "") {
-      if (items.length > 1) {
+      if (subtasks.length > 1) {
         e.preventDefault();
         removeItem(item.id);
       }
@@ -88,26 +97,37 @@ function TaskChecklist() {
         </Button>
       </div>
 
-      <div className="space-y-2">
-        {items.map((item) => (
-          <div key={item.id} className="flex items-center space-x-2 group">
-            <Checkbox
-              checked={item.checked}
-              onCheckedChange={() => toggleChecklistItem(item.id)}
-              className="mt-1"
-            />
-            <Input
-              value={item.text}
-              onChange={(e) =>
-                handleChecklistItemChange(item.id, e.target.value)
-              }
-              onKeyDown={(e) => handleKeyDown(e, item)}
-              placeholder="List item"
-              data-id={item.id}
-              className={`flex-1 border-none focus-visible:ring-0 ${
+      <div>
+        {subtasks.map((item) => (
+          <div key={item.id} className="flex items-start space-x-2 group">
+            <div className="h-6 flex items-center mt-2">
+              <Checkbox
+                checked={item.checked}
+                onCheckedChange={() => toggleChecklistItem(item.id)}
+              />
+            </div>
+            <Textarea
+              ref={(textarea) => {
+                if (textarea) {
+                  setTimeout(() => {
+                    textarea.style.height = "20px";
+                    textarea.style.height = `${textarea.scrollHeight}px`;
+                  }, 0);
+                }
+              }}
+              className={`resize-none overflow-hidden  w-full border-none focus-visible:ring-0 shadow-none ${
                 item.checked ? "line-through text-muted-foreground" : ""
               }`}
+              onChange={(e) => {
+                adjustTextAreaHeight();
+                handleChecklistItemChange(item.id, e.target.value);
+              }}
+              onKeyDown={(e) => handleKeyDown(e, item)}
+              value={item.text}
+              placeholder="List item"
+              data-id={item.id}
             />
+
             <Button
               variant="ghost"
               size="icon"

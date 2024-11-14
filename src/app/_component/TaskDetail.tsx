@@ -19,31 +19,42 @@ import ButtonGroup from "./ButtonGroup";
 import { Trash2 } from "lucide-react";
 import TaskChecklist from "./TaskChecklist";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Label } from "@/components/ui/label";
 
 type TaskDetailProps = {
   task: Task;
   toggleTask: (id: number) => void;
   removeTask: (id: number) => void;
 };
+
+export type ChecklistItem = {
+  id: number;
+  text: string;
+  checked: boolean;
+};
+
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
 
 async function generateSubtasks(taskTitle: string) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = `Create a detailed subtask list for this task: "${taskTitle}". 
-    Return only numbered subtasks, one per line. Keep it practical and actionable.`;
+    Return only numbered subtasks, one per line. Keep it practical and actionable. Limit it to 5 items`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-    const subtasks = text
+    const newSubtasks = text
       .split("\n")
       .filter((line) => line.trim())
       .map((line) => line.replace(/^\d+[\.\)]\s*/, "").trim())
       .filter((line) => line.length > 0);
 
-    return subtasks;
+    const checklistItems: ChecklistItem[] = newSubtasks.map((text, index) => ({
+      id: index + 1,
+      text,
+      checked: false,
+    }));
+    return checklistItems;
   } catch (error) {
     console.error("Error generating subtasks:", error);
     return [];
@@ -53,7 +64,7 @@ async function generateSubtasks(taskTitle: string) {
 function TaskDetail({ task, toggleTask, removeTask }: TaskDetailProps) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [subtasks, setSubtasks] = useState<string[]>([]);
+  const [subtasks, setSubtasks] = useState<ChecklistItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const handleAIGenerate = async () => {
@@ -138,25 +149,8 @@ function TaskDetail({ task, toggleTask, removeTask }: TaskDetailProps) {
               defaultValue={task.description}
             />
             {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-            <div className="space-y-2">
-              {subtasks.length > 0 ? (
-                <ul className="space-y-2">
-                  {subtasks.map((subtask, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <Checkbox id={`subtask-${index}`} />
-                      <Label htmlFor={`subtask-${index}`}>{subtask}</Label>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-gray-500 text-sm">
-                  {isGenerating
-                    ? "Generating subtasks..."
-                    : "Click generate to create AI-suggested subtasks"}
-                </div>
-              )}
-            </div>
-            <TaskChecklist />
+
+            <TaskChecklist subtasks={subtasks} setSubtasks={setSubtasks} />
           </div>
 
           <SheetFooter className="flex flex-row justify-between mt-2">
