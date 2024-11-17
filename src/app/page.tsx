@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Menu } from "lucide-react";
 import { useState } from "react";
 export type Task = {
   id: number;
@@ -18,15 +17,10 @@ export type Task = {
   completed: boolean;
 };
 
-import TaskDetail from "./_component/TaskDetail";
-import ButtonGroup from "./_component/ButtonGroup";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import TaskSheet from "./_component/TaskSheet";
+import ButtonGroup from "../components/ButtonGroup";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([
@@ -65,15 +59,12 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col ">
-      <Sheet key={"left"}>
+    <SidebarProvider>
+      <AppSidebar collapsible="offcanvas" />
+      <div className="min-h-screen w-full flex flex-col ">
         <header className="bg-white px-4 pt-4 pb-2">
           <div className="flex gap-2">
-            <SheetTrigger>
-              <div className="lg:hidden">
-                <Menu size={24} />
-              </div>
-            </SheetTrigger>
+            <SidebarTrigger key={"task"} />
             <h1 className="text-2xl font-semibold">To do List</h1>
           </div>
         </header>
@@ -107,40 +98,31 @@ export default function Home() {
                   <CardTitle>Tasks</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-2">
-                    {tasks.map((task) => (
-                      <TaskDetail
-                        key={task.id}
-                        task={task}
-                        toggleTask={toggleTask}
-                        removeTask={removeTask}
-                      />
-                    ))}
-                  </ul>
-                  {tasks.length === 0 && (
-                    <p className="text-center text-muted-foreground mt-4">
-                      No tasks yet. Add some tasks to get started!
-                    </p>
-                  )}
+                  <div>
+                    <ul className="space-y-2">
+                      {tasks.map((task) => (
+                        <TaskSheet
+                          key={task.id}
+                          task={task}
+                          toggleTask={toggleTask}
+                          removeTask={removeTask}
+                        />
+                      ))}
+                    </ul>
+                    {tasks.length === 0 && (
+                      <p className="text-center text-muted-foreground mt-4">
+                        No tasks yet. Add some tasks to get started!
+                      </p>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
             <TabsContent value="days">Change your password here.</TabsContent>
           </Tabs>
         </main>
-        <SheetContent side={"left"}>
-          <SheetHeader>
-            <SheetTitle className="flex flex-col w-full items-start gap-2">
-              <div>test</div>
-            </SheetTitle>
-          </SheetHeader>
-          <ul>
-            <li>Menu Item 1</li>
-            <li>Menu Item 2</li>
-            <li>Menu Item 3</li>
-          </ul>
-        </SheetContent>
-      </Sheet>
-    </div>
+        
+      </div>
+    </SidebarProvider>
   );
 }

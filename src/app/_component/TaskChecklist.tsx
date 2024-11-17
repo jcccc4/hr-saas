@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2 } from "lucide-react";
 import React, { KeyboardEvent, useRef } from "react";
-import { ChecklistItem } from "./TaskDetail";
+import { ChecklistItem } from "./TaskSheet";
 import { Textarea } from "@/components/ui/textarea";
 
 function TaskChecklist({

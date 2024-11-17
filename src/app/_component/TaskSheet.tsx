@@ -15,10 +15,11 @@ import {
 } from "@/components/ui/sheet";
 
 import { Task } from "../page";
-import ButtonGroup from "./ButtonGroup";
+import ButtonGroup from "../../components/ButtonGroup";
 import { Trash2 } from "lucide-react";
 import TaskChecklist from "./TaskChecklist";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type TaskDetailProps = {
   task: Task;
@@ -61,7 +62,8 @@ async function generateSubtasks(taskTitle: string) {
   }
 }
 
-function TaskDetail({ task, toggleTask, removeTask }: TaskDetailProps) {
+function TaskSheet({ task, toggleTask, removeTask }: TaskDetailProps) {
+  const isMobile = useIsMobile();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [subtasks, setSubtasks] = useState<ChecklistItem[]>([]);
@@ -130,41 +132,45 @@ function TaskDetail({ task, toggleTask, removeTask }: TaskDetailProps) {
         </li>
       </SheetTrigger>
 
-      <SheetContent className="flex flex-col h-[100vh] overflow-y-auto">
-        <div className="flex flex-col h-full">
-          <SheetHeader>
-            <SheetTitle className="flex flex-col w-full items-start gap-2">
-              <Input
-                className="border-none focus-visible:ring-0 text-lg"
-                defaultValue={task.text}
+      {isMobile && (
+        <SheetContent className="flex flex-col h-[100vh] overflow-y-auto">
+          <div className="flex flex-col h-full">
+            <SheetHeader>
+              <SheetTitle className="flex flex-col w-full items-start gap-2">
+                <Input
+                  className="border-none focus-visible:ring-0 text-lg"
+                  defaultValue={task.text}
+                />
+                <ButtonGroup />
+              </SheetTitle>
+            </SheetHeader>
+            <div className="flex-grow overflow-y-auto">
+              <Textarea
+                ref={textAreaRef}
+                className="resize-none min-h-[100px] w-full border-none focus-visible:ring-0 shadow-none"
+                onChange={adjustTextAreaHeight}
+                defaultValue={task.description}
               />
-              <ButtonGroup />
-            </SheetTitle>
-          </SheetHeader>
-          <div className="flex-grow overflow-y-auto">
-            <Textarea
-              ref={textAreaRef}
-              className="resize-none min-h-[100px] w-full border-none focus-visible:ring-0 shadow-none"
-              onChange={adjustTextAreaHeight}
-              defaultValue={task.description}
-            />
-            {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
+              {error && (
+                <div className="text-red-500 text-sm mb-2">{error}</div>
+              )}
 
-            <TaskChecklist subtasks={subtasks} setSubtasks={setSubtasks} />
+              <TaskChecklist subtasks={subtasks} setSubtasks={setSubtasks} />
+            </div>
+
+            <SheetFooter className="flex flex-row justify-between mt-2">
+              <Button onClick={handleAIGenerate} disabled={isGenerating}>
+                {isGenerating ? "Generating..." : "Customize with AI"}
+              </Button>
+              <SheetClose asChild>
+                <Button type="submit">Save changes</Button>
+              </SheetClose>
+            </SheetFooter>
           </div>
-
-          <SheetFooter className="flex flex-row justify-between mt-2">
-            <Button onClick={handleAIGenerate} disabled={isGenerating}>
-              {isGenerating ? "Generating..." : "Customize with AI"}
-            </Button>
-            <SheetClose asChild>
-              <Button type="submit">Save changes</Button>
-            </SheetClose>
-          </SheetFooter>
-        </div>
-      </SheetContent>
+        </SheetContent>
+      )}
     </Sheet>
   );
 }
 
-export default TaskDetail;
+export default TaskSheet;
