@@ -1,19 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2 } from "lucide-react";
-import React, { KeyboardEvent, useRef } from "react";
+import React, { KeyboardEvent, useRef, useState } from "react";
 import { ChecklistItem } from "./TaskSheet";
 import { Textarea } from "@/components/ui/textarea";
+import { Task } from "../page";
 
 function TaskChecklist({
   subtasks,
-  setSubtasks,
+  setTasks,
 }: {
   subtasks: ChecklistItem[];
-  setSubtasks: React.Dispatch<React.SetStateAction<ChecklistItem[]>>;
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
 }) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-
+  
   const adjustTextAreaHeight = () => {
     const textarea = textAreaRef.current;
     if (textarea) {
@@ -29,7 +30,7 @@ function TaskChecklist({
       const input = document.querySelector(
         `textarea[data-id="${id}"]`
       ) as HTMLTextAreaElement | null;
-      console.log(input);
+
       if (input) {
         input.focus();
         const length = input.value.length;
@@ -40,7 +41,12 @@ function TaskChecklist({
 
   const addItem = () => {
     const newId = Math.max(0, ...subtasks.map((item) => item.id)) + 1;
-    setSubtasks((prev) => [...prev, { id: newId, text: "", checked: false }]);
+    setTasks((prev) =>
+      prev.map((task) => ({
+        ...task,
+        checklist: [...subtasks, { id: newId, text: "", checked: false }],
+      }))
+    );
 
     focusOnItem(newId);
   };
@@ -49,26 +55,44 @@ function TaskChecklist({
     const currentIndex = subtasks.findIndex((item) => item.id === id);
     if (currentIndex > 0) {
       const previousItemId = subtasks[currentIndex - 1].id;
-      setSubtasks((prev) => prev.filter((item) => item.id !== id));
+      setTasks((prev) =>
+        prev.map((task) => ({
+          ...task,
+          checklist: subtasks.filter((item) => item.id !== id),
+        }))
+      );
       focusOnItem(previousItemId);
     } else {
       const nextItemId = subtasks[currentIndex + 1].id;
-      setSubtasks((prev) => prev.filter((item) => item.id !== id));
+      setTasks((prev) =>
+        prev.map((task) => ({
+          ...task,
+          checklist: subtasks.filter((item) => item.id !== id),
+        }))
+      );
       focusOnItem(nextItemId);
     }
   };
 
   const handleChecklistItemChange = (id: number, newText: string) => {
-    setSubtasks((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, text: newText } : item))
+    setTasks((prev) =>
+      prev.map((task) => ({
+        ...task,
+        checklist: subtasks.map((item) =>
+          item.id === id ? { ...item, text: newText } : item
+        ),
+      }))
     );
   };
 
   const toggleChecklistItem = (id: number) => {
-    setSubtasks((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item
-      )
+    setTasks((prev) =>
+      prev.map((task) => ({
+        ...task,
+        checklist: subtasks.map((item) =>
+          item.id === id ? { ...item, checked: !item.checked } : item
+        ),
+      }))
     );
   };
 

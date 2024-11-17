@@ -25,6 +25,8 @@ type TaskDetailProps = {
   task: Task;
   toggleTask: (id: number) => void;
   removeTask: (id: number) => void;
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  setActiveTask: React.Dispatch<React.SetStateAction<Task | null>>;
 };
 
 export type ChecklistItem = {
@@ -62,11 +64,16 @@ async function generateSubtasks(taskTitle: string) {
   }
 }
 
-function TaskSheet({ task, toggleTask, removeTask }: TaskDetailProps) {
+function TaskSheet({
+  task,
+  toggleTask,
+  removeTask,
+  setTasks,
+  setActiveTask,
+}: TaskDetailProps) {
   const isMobile = useIsMobile();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [subtasks, setSubtasks] = useState<ChecklistItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const handleAIGenerate = async () => {
@@ -74,7 +81,11 @@ function TaskSheet({ task, toggleTask, removeTask }: TaskDetailProps) {
     setError(null);
     try {
       const generatedSubtasks = await generateSubtasks(task.text);
-      setSubtasks(generatedSubtasks);
+      setTasks((prevTasks) =>
+        prevTasks.map((t) =>
+          t.id === task.id ? { ...t, checklist: generatedSubtasks } : t
+        )
+      );
     } catch (error) {
       console.error("Error:", error);
       setError("Failed to generate subtasks. Please try again.");
@@ -127,7 +138,7 @@ function TaskSheet({ task, toggleTask, removeTask }: TaskDetailProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <li className="flex items-center space-x-2 bg-secondary p-2 rounded-md">
+        <li onClick={() => setActiveTask(task)} className="flex items-center space-x-2 bg-secondary p-2 rounded-md">
           {taskItemContent}
         </li>
       </SheetTrigger>
@@ -155,7 +166,7 @@ function TaskSheet({ task, toggleTask, removeTask }: TaskDetailProps) {
                 <div className="text-red-500 text-sm mb-2">{error}</div>
               )}
 
-              <TaskChecklist subtasks={subtasks} setSubtasks={setSubtasks} />
+              <TaskChecklist subtasks={task.checklist} setTasks={setTasks} />
             </div>
 
             <SheetFooter className="flex flex-row justify-between mt-2">
