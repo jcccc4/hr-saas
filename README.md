@@ -83,7 +83,7 @@ npm run dev
 # or
 yarn dev
 ```
-## Project Structure
+## Project Structurey
 
 ```Project Structure
 

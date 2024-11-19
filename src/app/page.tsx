@@ -125,7 +125,8 @@ export default function Home() {
         prev ? { ...prev, checklist: newSubtasks } : null
       );
     } catch (error) {
-      setError("Failed to generate subtasks. Please try again.");
+      console.error("Failed to generate subtasks:", error);
+      setError("Failed to generate subtasks. Please try again. ");
     } finally {
       setIsGenerating(false);
     }
@@ -182,7 +183,6 @@ export default function Home() {
                   <div>
                     <ul className="space-y-2">
                       {tasks.map((task) => (
-                        
                         <TaskSheet
                           key={task.id}
                           task={task}
