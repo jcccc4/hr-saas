@@ -82,13 +82,11 @@ Run the development server:
 npm run dev
 # or
 yarn dev
+```
 
-Copy
+```Project Structure
+#Project Structure
 
-Insert at cursor
-bash
-
-Project Structure
 src/
 ├── app/
 │   ├── _component/         # HR task components
@@ -98,4 +96,4 @@ src/
 ├── components/
 │   ├── ui/               # Reusable UI components
 │   └── app-sidebar.tsx   # Application navigation
-```
+
