@@ -10,17 +10,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 // Menu items.
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "/",
     icon: Home,
   },
   {
     title: "Inbox",
-    url: "#",
+    url: "/dashboard",
     icon: Inbox,
   },
   {
@@ -50,17 +51,20 @@ export function AppSidebar({
   return (
     <Sidebar side={side} collapsible={collapsible}>
       <SidebarContent>
-        <SidebarHeader>Application</SidebarHeader>
+        <SidebarHeader className="w-full h-20 flex justify-start flex-row items-center">
+          <div className="h-6 w-6 bg-primary rounded-full"></div>
+          <h1>Application</h1>
+        </SidebarHeader>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

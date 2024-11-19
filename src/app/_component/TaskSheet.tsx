@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -26,8 +26,8 @@ type TaskDetailProps = {
   toggleTask: (id: number) => void;
   removeTask: (id: number) => void;
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-  setActiveTask: React.Dispatch<React.SetStateAction<Task | null>>;
-  activeTask: Task | null;
+  activeTask: Task;
+  setActiveTaskId: React.Dispatch<React.SetStateAction<number | null>>;
 };
 
 export type ChecklistItem = {
@@ -70,8 +70,8 @@ function TaskSheet({
   toggleTask,
   removeTask,
   setTasks,
-  setActiveTask,
   activeTask,
+  setActiveTaskId,
 }: TaskDetailProps) {
   const isMobile = useIsMobile();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -117,40 +117,37 @@ function TaskSheet({
         onCheckedChange={() => toggleTask(task.id)}
       />
       <div
-        className={`flex-grow cursor-pointer ${
+        className={`flex-grow cursor-pointer h-full flex items-center justify-between box-border border-b border-primary-foreground  ${
           task.completed ? "line-through text-muted-foreground" : ""
         }`}
       >
-        {task.text}
+        <p>{task.text}</p>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            removeTask(task.id);
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+          <span className="sr-only">Remove task</span>
+        </Button>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={(e) => {
-          e.stopPropagation();
-          removeTask(task.id);
-        }}
-      >
-        <Trash2 className="h-4 w-4" />
-        <span className="sr-only">Remove task</span>
-      </Button>
     </>
   );
 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        {activeTask?.id === task.id ? (
-          <li
-            onClick={() => setActiveTask(task)}
-            className="flex items-center space-x-2 bg-secondary border-2 border-primary p-2 rounded-md"
-          >
+        {task.id === activeTask.id ? (
+          <li className="flex items-center pl-4 h-10 gap-2 rounded-md bg-primary-foreground">
             {taskItemContent}
           </li>
         ) : (
           <li
-            onClick={() => setActiveTask(task)}
-            className="flex items-center space-x-2 bg-secondary p-2 rounded-md"
+            onClick={() => setActiveTaskId(task.id)}
+            className="flex items-center pl-4 h-10 gap-2 rounded-md"
           >
             {taskItemContent}
           </li>
@@ -164,7 +161,7 @@ function TaskSheet({
               <SheetTitle className="flex flex-col w-full items-start gap-2">
                 <Input
                   className="border-none focus-visible:ring-0 text-lg"
-                  defaultValue={task.text}
+                  value={activeTask.text}
                 />
                 <ButtonGroup />
               </SheetTitle>
@@ -174,13 +171,17 @@ function TaskSheet({
                 ref={textAreaRef}
                 className="resize-none min-h-[100px] w-full border-none focus-visible:ring-0 shadow-none"
                 onChange={adjustTextAreaHeight}
-                defaultValue={task.description}
+                value={activeTask.description}
               />
               {error && (
                 <div className="text-red-500 text-sm mb-2">{error}</div>
               )}
 
-              <TaskChecklist subtasks={task.checklist} setTasks={setTasks} />
+              <TaskChecklist
+                setTasks={setTasks}
+                activeTask={activeTask}
+                setActiveTaskId={setActiveTaskId}
+              />
             </div>
 
             <SheetFooter className="flex flex-row justify-between mt-2">

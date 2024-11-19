@@ -70,14 +70,41 @@ const initialTasks: Task[] = [
     checklist: [],
   },
 ];
+
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [newTaskText, setNewTaskText] = useState("");
+  const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
+  const activeTask =
+    tasks.find((task) => task.id === activeTaskId) || ({} as Task);
+
+  const updateTask = (id: number, updates: Partial<Task>) => {
+    setTasks((prev) =>
+      prev.map((task) => (task.id === id ? { ...task, ...updates } : task))
+    );
+  };
+
+  // Simplified handlers
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (activeTaskId) {
+      updateTask(activeTaskId, { text: e.target.value });
+    }
+  };
+
+  const handleDescriptionChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    if (activeTaskId) {
+      updateTask(activeTaskId, { description: e.target.value });
+      adjustTextAreaHeight();
+    }
+  };
 
   const toggleTask = (id: number) => {
     setTasks(
@@ -87,17 +114,30 @@ export default function Home() {
     );
   };
 
+  const addTask = (taskTitle: string) => {
+    const task: Task = {
+      id: tasks.length + 1,
+      text: taskTitle,
+      description: "",
+      completed: false,
+      checklist: [],
+    };
+    setTasks((prev) => {
+      const newArray = prev.map((task) => ({ ...task, onFocus: false }));
+      return [...newArray, task];
+    });
+    setActiveTaskId(task.id);
+  };
+
   const removeTask = (id: number) => {
     setTasks(tasks.filter((task) => task.id !== id));
   };
 
   const handleAIGenerate = async () => {
-    if (!activeTask) return;
-
     setIsGenerating(true);
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Create a detailed subtask list for this task: "${activeTask.text}". 
+      const prompt = `Create a detailed subtask list for this task: "${activeTask?.text}". 
         Return only numbered subtasks, one per line. Keep it practical and actionable. Limit it to 5 items`;
 
       const result = await model.generateContent(prompt);
@@ -120,10 +160,7 @@ export default function Home() {
           task.id === activeTask.id ? { ...task, checklist: newSubtasks } : task
         )
       );
-
-      setActiveTask((prev) =>
-        prev ? { ...prev, checklist: newSubtasks } : null
-      );
+     
     } catch (error) {
       console.error("Failed to generate subtasks:", error);
       setError("Failed to generate subtasks. Please try again. ");
@@ -141,8 +178,8 @@ export default function Home() {
   };
 
   return (
-    <SidebarProvider>
-      <AppSidebar collapsible="offcanvas" />
+    
+      
       <div className="min-h-screen w-full flex flex-col ">
         <header className="bg-white px-4 pt-4 pb-2">
           <div className="flex gap-2">
@@ -151,7 +188,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="bg-[#D2DDEF] flex flex-col flex-grow h-full">
+        <main className="bg-primary-foreground flex flex-col flex-grow h-full">
           <Tabs defaultValue="today" className="h-full flex flex-col pb-2">
             <TabsList className="w-full flex justify-start bg-white rounded-non px-4">
               <TabsTrigger value="today">Today</TabsTrigger>
@@ -165,33 +202,41 @@ export default function Home() {
               <Card className="p-4 w-full flex flex-col gap-2">
                 <CardContent>
                   <Input
-                    type="task"
-                    className="w-full"
+                    className="w-full border-none focus-visible:ring-0"
                     placeholder="What would you like to do?"
+                    value={newTaskText}
+                    onChange={(e) => setNewTaskText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newTaskText.trim()) {
+                        addTask(newTaskText);
+                        setNewTaskText("");
+                      }
+                    }}
                   />
                 </CardContent>
                 <CardFooter className="flex justify-between">
                   <ButtonGroup />
-                  <Button>Add Task</Button>
+                  <Button onClick={() => addTask(newTaskText)}>Add Task</Button>
                 </CardFooter>
               </Card>
-              <Card className="p-4 w-full flex flex-col ">
+              <Card className="p-4 w-full flex flex-col gap-2 ">
                 <CardHeader>
-                  <CardTitle>Tasks</CardTitle>
+                  <CardTitle className="text-lg font-semibold">
+                    Task List
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div>
-                    <ul className="space-y-2">
+                    <ul className="">
                       {tasks.map((task) => (
-                        
                         <TaskSheet
                           key={task.id}
                           task={task}
                           toggleTask={toggleTask}
                           removeTask={removeTask}
                           setTasks={setTasks}
-                          setActiveTask={setActiveTask}
                           activeTask={activeTask}
+                          setActiveTaskId={setActiveTaskId}
                         />
                       ))}
                     </ul>
@@ -204,12 +249,14 @@ export default function Home() {
                 </CardContent>
               </Card>
 
-              <Card className="hidden p-4 w-full md:flex flex-col col-end-3 row-start-1 row-end-3 ">
+              <Card className="relative hidden p-4 w-full md:flex flex-col col-end-3 row-start-1 row-end-3 ">
                 <CardHeader>
-                  <CardTitle className="flex flex-col w-full items-start gap-2">
+                  <CardTitle className="flex flex-col w-full items-start gap-2 text-lg">
                     <Input
+                      disabled={Object.keys(activeTask).length === 0}
                       className="border-none focus-visible:ring-0 text-lg"
-                      defaultValue={activeTask?.text}
+                      onChange={handleTitleChange}
+                      value={activeTask.text || ""}
                     />
                     <ButtonGroup />
                   </CardTitle>
@@ -217,27 +264,31 @@ export default function Home() {
                 <CardContent className="flex-grow overflow-y-auto">
                   <Textarea
                     ref={textAreaRef}
+                    disabled={Object.keys(activeTask).length === 0}
                     className="resize-none min-h-[100px] w-full border-none focus-visible:ring-0 shadow-none"
-                    onChange={adjustTextAreaHeight}
-                    defaultValue={activeTask?.description}
+                    onChange={handleDescriptionChange}
+                    value={activeTask.description || ""}
                   />
                   {error && (
                     <div className="text-red-500 text-sm mb-2">{error}</div>
                   )}
 
                   <TaskChecklist
-                    subtasks={activeTask ? activeTask.checklist : []}
                     setTasks={setTasks}
+                    activeTask={activeTask}
+                    setActiveTaskId={setActiveTaskId}
                   />
 
-                  <CardFooter className="flex flex-row justify-between mt-2">
+                  <CardFooter className="absolute bottom-4 right-4 flex flex-row gap-4  mt-2">
                     <Button
+                      variant={"outline"}
                       onClick={handleAIGenerate}
-                      disabled={isGenerating && !!activeTask}
+                      disabled={
+                        isGenerating || Object.keys(activeTask).length === 0
+                      }
                     >
                       {isGenerating ? "Generating..." : "Customize with AI"}
                     </Button>
-
                     <Button type="submit">Save changes</Button>
                   </CardFooter>
                 </CardContent>
@@ -247,6 +298,6 @@ export default function Home() {
           </Tabs>
         </main>
       </div>
-    </SidebarProvider>
+
   );
 }

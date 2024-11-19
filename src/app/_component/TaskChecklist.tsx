@@ -7,14 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Task } from "../page";
 
 function TaskChecklist({
-  subtasks,
   setTasks,
+  activeTask,
+  setActiveTaskId,
 }: {
-  subtasks: ChecklistItem[];
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  activeTask: Task;
+  setActiveTaskId: React.Dispatch<React.SetStateAction<number | null>>;
 }) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  
+  const subtasks = activeTask.checklist ?? [];
   const adjustTextAreaHeight = () => {
     const textarea = textAreaRef.current;
     if (textarea) {
@@ -47,7 +49,6 @@ function TaskChecklist({
         checklist: [...subtasks, { id: newId, text: "", checked: false }],
       }))
     );
-
     focusOnItem(newId);
   };
 
@@ -74,15 +75,23 @@ function TaskChecklist({
     }
   };
 
-  const handleChecklistItemChange = (id: number, newText: string) => {
+  const handleChecklistItemChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+    id: number
+  ) => {
     setTasks((prev) =>
-      prev.map((task) => ({
-        ...task,
-        checklist: subtasks.map((item) =>
-          item.id === id ? { ...item, text: newText } : item
-        ),
-      }))
+      prev.map((task) =>
+        task.id === activeTask.id
+          ? {
+              ...task,
+              checklist: activeTask.checklist.map((prev) =>
+                prev.id === id ? { ...prev, text: e.target.value } : prev
+              ),
+            }
+          : task
+      )
     );
+    setActiveTaskId(activeTask.id);
   };
 
   const toggleChecklistItem = (id: number) => {
@@ -144,7 +153,7 @@ function TaskChecklist({
               }`}
               onChange={(e) => {
                 adjustTextAreaHeight();
-                handleChecklistItemChange(item.id, e.target.value);
+                handleChecklistItemChange(e, item.id);
               }}
               onKeyDown={(e) => handleKeyDown(e, item)}
               value={item.text}

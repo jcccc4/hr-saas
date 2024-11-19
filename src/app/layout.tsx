@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Figtree } from "next/font/google";
 import "./globals.css";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-geist-sans" });
 
 export const metadata: Metadata = {
@@ -18,8 +20,10 @@ export default function RootLayout({
       <body
         className={`${figtree.variable}  antialiased`}
         suppressHydrationWarning
-      >
+      ><SidebarProvider>
+        <AppSidebar collapsible="offcanvas" />
         {children}
+        </SidebarProvider>
       </body>
     </html>
   );
