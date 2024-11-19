@@ -182,6 +182,7 @@ export default function Home() {
                   <div>
                     <ul className="space-y-2">
                       {tasks.map((task) => (
+                        
                         <TaskSheet
                           key={task.id}
                           task={task}
@@ -189,6 +190,7 @@ export default function Home() {
                           removeTask={removeTask}
                           setTasks={setTasks}
                           setActiveTask={setActiveTask}
+                          activeTask={activeTask}
                         />
                       ))}
                     </ul>

@@ -27,6 +27,7 @@ type TaskDetailProps = {
   removeTask: (id: number) => void;
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setActiveTask: React.Dispatch<React.SetStateAction<Task | null>>;
+  activeTask: Task | null;
 };
 
 export type ChecklistItem = {
@@ -70,6 +71,7 @@ function TaskSheet({
   removeTask,
   setTasks,
   setActiveTask,
+  activeTask,
 }: TaskDetailProps) {
   const isMobile = useIsMobile();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -138,9 +140,21 @@ function TaskSheet({
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <li onClick={() => setActiveTask(task)} className="flex items-center space-x-2 bg-secondary p-2 rounded-md">
-          {taskItemContent}
-        </li>
+        {activeTask?.id === task.id ? (
+          <li
+            onClick={() => setActiveTask(task)}
+            className="flex items-center space-x-2 bg-secondary border-2 border-primary p-2 rounded-md"
+          >
+            {taskItemContent}
+          </li>
+        ) : (
+          <li
+            onClick={() => setActiveTask(task)}
+            className="flex items-center space-x-2 bg-secondary p-2 rounded-md"
+          >
+            {taskItemContent}
+          </li>
+        )}
       </SheetTrigger>
 
       {isMobile && (
