@@ -18,7 +18,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Textarea } from "@/components/ui/textarea";
 import TaskChecklist from "./_component/TaskChecklist";
-
+console.log("test")
 export type ChecklistItem = {
   id: number;
   text: string;
