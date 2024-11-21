@@ -19,20 +19,20 @@ const items = [
     url: "/",
     icon: Home,
   },
-  {
-    title: "Inbox",
-    url: "/dashboard",
-    icon: Inbox,
-  },
+  
   {
     title: "Calendar",
-    url: "#",
+    url: "/leave",
     icon: Calendar,
   },
   {
     title: "Search",
     url: "#",
     icon: Search,
+  },{
+    title: "Inbox",
+    url: "/",
+    icon: Inbox,
   },
   {
     title: "Settings",
